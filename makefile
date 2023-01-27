@@ -2,7 +2,7 @@ PY = python3
 AUX = *.pyc *.cprof */*.pyc
 
 test:
-	$(PY) test.py
+	$(PY) falcon/test.py
 
 profile:
 	rm -f $(AUX)

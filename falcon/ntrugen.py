@@ -1,11 +1,11 @@
 """
 This file implements the section 3.8.2 of Falcon's documentation.
 """
-from fft import fft, ifft, add_fft, mul_fft, adj_fft, div_fft
-from fft import add, mul, div, adj
-from ntt import ntt
-from common import sqnorm
-from samplerz import samplerz
+from falcon.fft import fft, ifft, add_fft, mul_fft, adj_fft, div_fft
+from falcon.fft import add, mul, div, adj
+from falcon.ntt import ntt
+from falcon.common import sqnorm
+from falcon.samplerz import samplerz
 
 
 q = 12 * 1024 + 1
@@ -30,7 +30,7 @@ def karatsuba(a, b, n):
         a1b1 = karatsuba(a1, b1, n2)
         axbx = karatsuba(ax, bx, n2)
         for i in range(n):
-            axbx[i] -= (a0b0[i] + a1b1[i])
+            axbx[i] -= a0b0[i] + a1b1[i]
         ab = [0] * (2 * n)
         for i in range(n):
             ab[i] += a0b0[i]
@@ -117,10 +117,12 @@ def reduce(f, g, F, G):
     fa_fft = fft(f_adjust)
     ga_fft = fft(g_adjust)
 
-    while(1):
+    while 1:
         # Because we work in finite precision to reduce very large polynomials,
         # we may need to perform the reduction several times.
-        Size = max(53, bitsize(min(F)), bitsize(max(F)), bitsize(min(G)), bitsize(max(G)))
+        Size = max(
+            53, bitsize(min(F)), bitsize(max(F)), bitsize(min(G)), bitsize(max(G))
+        )
         if Size < size:
             break
 
@@ -129,8 +131,12 @@ def reduce(f, g, F, G):
         Fa_fft = fft(F_adjust)
         Ga_fft = fft(G_adjust)
 
-        den_fft = add_fft(mul_fft(fa_fft, adj_fft(fa_fft)), mul_fft(ga_fft, adj_fft(ga_fft)))
-        num_fft = add_fft(mul_fft(Fa_fft, adj_fft(fa_fft)), mul_fft(Ga_fft, adj_fft(ga_fft)))
+        den_fft = add_fft(
+            mul_fft(fa_fft, adj_fft(fa_fft)), mul_fft(ga_fft, adj_fft(ga_fft))
+        )
+        num_fft = add_fft(
+            mul_fft(Fa_fft, adj_fft(fa_fft)), mul_fft(Ga_fft, adj_fft(ga_fft))
+        )
         k_fft = div_fft(num_fft, den_fft)
         k = ifft(k_fft)
         k = [int(round(elt)) for elt in k]
@@ -176,7 +182,7 @@ def ntru_solve(f, g):
         if d != 1:
             raise ValueError
         else:
-            return [- q * v], [q * u]
+            return [-q * v], [q * u]
     else:
         fp = field_norm(f)
         gp = field_norm(g)
@@ -197,7 +203,7 @@ def gs_norm(f, g, q):
     ffgg = add(mul(f, adj(f)), mul(g, adj(g)))
     Ft = div(adj(g), ffgg)
     Gt = div(adj(f), ffgg)
-    sqnorm_FG = (q ** 2) * sqnorm([Ft, Gt])
+    sqnorm_FG = (q**2) * sqnorm([Ft, Gt])
     return max(sqnorm_fg, sqnorm_FG)
 
 
@@ -209,7 +215,7 @@ def gen_poly(n):
     """
     # 1.17 * sqrt(12289 / 8192)
     sigma = 1.43300980528773
-    assert(n < 4096)
+    assert n < 4096
     f0 = [samplerz(0, sigma, sigma - 0.001) for _ in range(4096)]
     f = [0] * n
     k = 4096 // n
@@ -229,7 +235,7 @@ def ntru_gen(n):
     while True:
         f = gen_poly(n)
         g = gen_poly(n)
-        if gs_norm(f, g, q) > (1.17 ** 2) * q:
+        if gs_norm(f, g, q) > (1.17**2) * q:
             continue
         f_ntt = ntt(f)
         if any((elem == 0) for elem in f_ntt):

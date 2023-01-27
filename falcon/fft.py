@@ -7,8 +7,8 @@ The code is voluntarily very similar to the code of the NTT.
 It is probably possible to use templating to merge both implementations.
 """
 
-from common import split, merge         # Import split and merge
-from fft_constants import roots_dict    # Import constants useful for the FFT
+from falcon.common import split, merge  # Import split and merge
+from falcon.fft_constants import roots_dict  # Import constants useful for the FFT
 
 
 def split_fft(f_fft):
@@ -60,12 +60,12 @@ def fft(f):
     Format: input as coefficients, output as FFT
     """
     n = len(f)
-    if (n > 2):
+    if n > 2:
         f0, f1 = split(f)
         f0_fft = fft(f0)
         f1_fft = fft(f1)
         f_fft = merge_fft([f0_fft, f1_fft])
-    elif (n == 2):
+    elif n == 2:
         f_fft = [0] * n
         f_fft[0] = f[0] + 1j * f[1]
         f_fft[1] = f[0] - 1j * f[1]
@@ -81,12 +81,12 @@ def ifft(f_fft):
     Format: input as FFT, output as coefficients
     """
     n = len(f_fft)
-    if (n > 2):
+    if n > 2:
         f0_fft, f1_fft = split_fft(f_fft)
         f0 = ifft(f0_fft)
         f1 = ifft(f1_fft)
         f = merge([f0, f1])
-    elif (n == 2):
+    elif n == 2:
         f = [0] * n
         f[0] = f_fft[0].real
         f[1] = f_fft[0].imag
@@ -103,7 +103,7 @@ def add(f, g):
 def neg(f):
     """Negation of a polynomials (any representation)."""
     deg = len(f)
-    return [- f[i] for i in range(deg)]
+    return [-f[i] for i in range(deg)]
 
 
 def sub(f, g):

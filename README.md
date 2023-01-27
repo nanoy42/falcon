@@ -1,4 +1,19 @@
-# falcon.py
+# falcon
+
+## Packaging
+
+This is manly code from this repository: https://github.com/tprest/falcon.py and the only thing I did was to package it using poetry.
+
+Once installed, for instance with the following command: `pip install git+https://github.com/nanoy42/falcon`, you can recover the same behavior as the rest of the tutorial with
+
+```python
+from falcon import falcon
+```
+
+I will probably not publish this on PyPi and install it directly from this github repo for my projects.
+
+
+## Original README
 
 This repository implements the signature scheme Falcon (https://falcon-sign.info/).
 Falcon stands for **FA**st Fourier **L**attice-based **CO**mpact signatures over **N**TRU

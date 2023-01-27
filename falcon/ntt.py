@@ -7,8 +7,11 @@ The NTT implemented here is for polynomials in Z_q[x]/(phi), with:
 The code is voluntarily very similar to the code of the FFT.
 It is probably possible to use templating to merge both implementations.
 """
-from common import split, merge, q                     # Import split and merge
-from ntt_constants import roots_dict_Zq, inv_mod_q     # Import constants useful for the FFT
+from falcon.common import split, merge, q  # Import split and merge
+from falcon.ntt_constants import (
+    roots_dict_Zq,
+    inv_mod_q,
+)  # Import constants useful for the FFT
 
 
 """i2 is the inverse of 2 mod q."""
@@ -64,12 +67,12 @@ def ntt(f):
     Format: input as coefficients, output as NTT
     """
     n = len(f)
-    if (n > 2):
+    if n > 2:
         f0, f1 = split(f)
         f0_ntt = ntt(f0)
         f1_ntt = ntt(f1)
         f_ntt = merge_ntt([f0_ntt, f1_ntt])
-    elif (n == 2):
+    elif n == 2:
         f_ntt = [0] * n
         f_ntt[0] = (f[0] + sqr1 * f[1]) % q
         f_ntt[1] = (f[0] - sqr1 * f[1]) % q
@@ -85,12 +88,12 @@ def intt(f_ntt):
     Format: input as NTT, output as coefficients
     """
     n = len(f_ntt)
-    if (n > 2):
+    if n > 2:
         f0_ntt, f1_ntt = split_ntt(f_ntt)
         f0 = intt(f0_ntt)
         f1 = intt(f1_ntt)
         f = merge([f0, f1])
-    elif (n == 2):
+    elif n == 2:
         f = [0] * n
         f[0] = (i2 * (f_ntt[0] + f_ntt[1])) % q
         f[1] = (i2 * inv_mod_q[1479] * (f_ntt[0] - f_ntt[1])) % q
@@ -107,7 +110,7 @@ def add_zq(f, g):
 def neg_zq(f):
     """Negation of a polynomials (any representation)."""
     deg = len(f)
-    return [(- f[i]) % q for i in range(deg)]
+    return [(-f[i]) % q for i in range(deg)]
 
 
 def sub_zq(f, g):

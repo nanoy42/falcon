@@ -5,11 +5,11 @@
 - the Fast Fourier sampling (only in FFT)
 .
 """
-from common import split, merge                         # Split, merge
-from fft import add, sub, mul, div, adj                 # Operations in coef.
-from fft import add_fft, sub_fft, mul_fft, div_fft, adj_fft  # Ops in FFT
-from fft import split_fft, merge_fft, fft_ratio         # FFT
-from samplerz import samplerz                           # Gaussian sampler in Z
+from falcon.common import split, merge  # Split, merge
+from falcon.fft import add, sub, mul, div, adj  # Operations in coef.
+from falcon.fft import add_fft, sub_fft, mul_fft, div_fft, adj_fft  # Ops in FFT
+from falcon.fft import split_fft, merge_fft, fft_ratio  # FFT
+from falcon.samplerz import samplerz  # Gaussian sampler in Z
 
 
 def gram(B):
@@ -45,8 +45,8 @@ def ldl(G):
     """
     deg = len(G[0][0])
     dim = len(G)
-    assert (dim == 2)
-    assert (dim == len(G[0]))
+    assert dim == 2
+    assert dim == len(G[0])
 
     zero = [0] * deg
     one = [1] + [0] * (deg - 1)
@@ -72,8 +72,8 @@ def ldl_fft(G):
     """
     deg = len(G[0][0])
     dim = len(G)
-    assert (dim == 2)
-    assert (dim == len(G[0]))
+    assert dim == 2
+    assert dim == len(G[0])
 
     zero = [0] * deg
     one = [1] * deg
@@ -100,14 +100,14 @@ def ffldl(G):
     n = len(G[0][0])
     L, D = ldl(G)
     # Coefficients of L, D are elements of R[x]/(x^n - x^(n/2) + 1), in coefficient representation
-    if (n > 2):
+    if n > 2:
         # A bisection is done on elements of a 2*2 diagonal matrix.
         d00, d01 = split(D[0][0])
         d10, d11 = split(D[1][1])
         G0 = [[d00, d01], [adj(d01), d00]]
         G1 = [[d10, d11], [adj(d11), d10]]
         return [L[1][0], ffldl(G0), ffldl(G1)]
-    elif (n == 2):
+    elif n == 2:
         # Bottom of the recursion.
         D[0][0][1] = 0
         D[1][1][1] = 0
@@ -127,14 +127,14 @@ def ffldl_fft(G):
     n = len(G[0][0]) * fft_ratio
     L, D = ldl_fft(G)
     # Coefficients of L, D are elements of R[x]/(x^n - x^(n/2) + 1), in FFT representation
-    if (n > 2):
+    if n > 2:
         # A bisection is done on elements of a 2*2 diagonal matrix.
         d00, d01 = split_fft(D[0][0])
         d10, d11 = split_fft(D[1][1])
         G0 = [[d00, d01], [adj_fft(d01), d00]]
         G1 = [[d10, d11], [adj_fft(d11), d10]]
         return [L[1][0], ffldl_fft(G0), ffldl_fft(G1)]
-    elif (n == 2):
+    elif n == 2:
         # End of the recursion (each element is real).
         return [L[1][0], D[0][0], D[1][1]]
 
@@ -150,13 +150,13 @@ def ffnp(t, T):
     """
     n = len(t[0])
     z = [None, None]
-    if (n > 1):
+    if n > 1:
         l10, T0, T1 = T
         z[1] = merge(ffnp(split(t[1]), T1))
         t0b = add(t[0], mul(sub(t[1], z[1]), l10))
         z[0] = merge(ffnp(split(t0b), T0))
         return z
-    elif (n == 1):
+    elif n == 1:
         z[0] = [round(t[0][0])]
         z[1] = [round(t[1][0])]
         return z
@@ -173,13 +173,13 @@ def ffnp_fft(t, T):
     """
     n = len(t[0]) * fft_ratio
     z = [0, 0]
-    if (n > 1):
+    if n > 1:
         l10, T0, T1 = T
         z[1] = merge_fft(ffnp_fft(split_fft(t[1]), T1))
         t0b = add_fft(t[0], mul_fft(sub_fft(t[1], z[1]), l10))
         z[0] = merge_fft(ffnp_fft(split_fft(t0b), T0))
         return z
-    elif (n == 1):
+    elif n == 1:
         z[0] = [round(t[0][0].real)]
         z[1] = [round(t[1][0].real)]
         return z
@@ -198,13 +198,13 @@ def ffsampling_fft(t, T, sigmin, randombytes):
     """
     n = len(t[0]) * fft_ratio
     z = [0, 0]
-    if (n > 1):
+    if n > 1:
         l10, T0, T1 = T
         z[1] = merge_fft(ffsampling_fft(split_fft(t[1]), T1, sigmin, randombytes))
         t0b = add_fft(t[0], mul_fft(sub_fft(t[1], z[1]), l10))
         z[0] = merge_fft(ffsampling_fft(split_fft(t0b), T0, sigmin, randombytes))
         return z
-    elif (n == 1):
+    elif n == 1:
         z[0] = [samplerz(t[0][0].real, T[0], sigmin, randombytes)]
         z[1] = [samplerz(t[1][0].real, T[0], sigmin, randombytes)]
         return z

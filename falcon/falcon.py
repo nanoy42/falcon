@@ -2,39 +2,32 @@
 Python implementation of Falcon:
 https://falcon-sign.info/.
 """
-from common import q
+from falcon.common import q
 from numpy import set_printoptions
 from math import sqrt
-from fft import fft, ifft, sub, neg, add_fft, mul_fft
-from ntt import sub_zq, mul_zq, div_zq
-from ffsampling import gram, ffldl_fft, ffsampling_fft
-from ntrugen import ntru_gen
-from encoding import compress, decompress
+from falcon.fft import fft, ifft, sub, neg, add_fft, mul_fft
+from falcon.ntt import sub_zq, mul_zq, div_zq
+from falcon.ffsampling import gram, ffldl_fft, ffsampling_fft
+from falcon.ntrugen import ntru_gen
+from falcon.encoding import compress, decompress
+
 # https://pycryptodome.readthedocs.io/en/latest/src/hash/shake256.html
 from Crypto.Hash import SHAKE256
+
 # Randomness
 from os import urandom
-from rng import ChaCha20
+from falcon.rng import ChaCha20
+
 # For debugging purposes
 import sys
+
 if sys.version_info >= (3, 4):
     from importlib import reload  # Python 3.4+ only.
 
 
 set_printoptions(linewidth=200, precision=5, suppress=True)
 
-logn = {
-    2: 1,
-    4: 2,
-    8: 3,
-    16: 4,
-    32: 5,
-    64: 6,
-    128: 7,
-    256: 8,
-    512: 9,
-    1024: 10
-}
+logn = {2: 1, 4: 2, 8: 3, 16: 4, 32: 5, 64: 6, 128: 7, 256: 8, 512: 9, 1024: 10}
 
 
 # Bytelength of the signing salt and header
@@ -150,7 +143,7 @@ def print_tree(tree, pref=""):
 
     a = ""
     if len(tree) == 3:
-        if (pref == ""):
+        if pref == "":
             a += pref + str(tree[0]) + "\n"
         else:
             a += pref[:-width] + top + str(tree[0]) + "\n"
@@ -159,7 +152,7 @@ def print_tree(tree, pref=""):
         return a
 
     else:
-        return (pref[:-width] + leaf + str(tree) + "\n")
+        return pref[:-width] + leaf + str(tree) + "\n"
 
 
 def normalize_tree(tree, sigma):
@@ -317,8 +310,9 @@ class SecretKey:
             # If a seed is defined, initialize a ChaCha20 PRG
             # that is used to generate pseudo-randomness.
             chacha_prng = ChaCha20(seed)
-            z_fft = ffsampling_fft(t_fft, self.T_fft, self.sigmin,
-                                   chacha_prng.randombytes)
+            z_fft = ffsampling_fft(
+                t_fft, self.T_fft, self.sigmin, chacha_prng.randombytes
+            )
 
         v0_fft = add_fft(mul_fft(z_fft[0], a), mul_fft(z_fft[1], c))
         v1_fft = add_fft(mul_fft(z_fft[0], b), mul_fft(z_fft[1], d))
@@ -345,19 +339,19 @@ class SecretKey:
 
         # We repeat the signing procedure until we find a signature that is
         # short enough (both the Euclidean norm and the bytelength)
-        while(1):
-            if (randombytes == urandom):
+        while 1:
+            if randombytes == urandom:
                 s = self.sample_preimage(hashed)
             else:
                 seed = randombytes(SEED_LEN)
                 s = self.sample_preimage(hashed, seed=seed)
-            norm_sign = sum(coef ** 2 for coef in s[0])
-            norm_sign += sum(coef ** 2 for coef in s[1])
+            norm_sign = sum(coef**2 for coef in s[0])
+            norm_sign += sum(coef**2 for coef in s[1])
             # Check the Euclidean norm
             if norm_sign <= self.signature_bound:
                 enc_s = compress(s[1], self.sig_bytelen - HEAD_LEN - SALT_LEN)
                 # Check that the encoding is valid (sometimes it fails)
-                if (enc_s is not False):
+                if enc_s is not False:
                     return header + salt + enc_s
 
     def verify(self, message, signature):
@@ -365,12 +359,12 @@ class SecretKey:
         Verify a signature.
         """
         # Unpack the salt and the short polynomial s1
-        salt = signature[HEAD_LEN:HEAD_LEN + SALT_LEN]
-        enc_s = signature[HEAD_LEN + SALT_LEN:]
+        salt = signature[HEAD_LEN : HEAD_LEN + SALT_LEN]
+        enc_s = signature[HEAD_LEN + SALT_LEN :]
         s1 = decompress(enc_s, self.sig_bytelen - HEAD_LEN - SALT_LEN, self.n)
 
         # Check that the encoding is valid
-        if (s1 is False):
+        if s1 is False:
             print("Invalid encoding")
             return False
 
@@ -380,8 +374,8 @@ class SecretKey:
         s0 = [(coef + (q >> 1)) % q - (q >> 1) for coef in s0]
 
         # Check that the (s0, s1) is short
-        norm_sign = sum(coef ** 2 for coef in s0)
-        norm_sign += sum(coef ** 2 for coef in s1)
+        norm_sign = sum(coef**2 for coef in s0)
+        norm_sign += sum(coef**2 for coef in s1)
         if norm_sign > self.signature_bound:
             print("Squared norm of signature is too large:", norm_sign)
             return False

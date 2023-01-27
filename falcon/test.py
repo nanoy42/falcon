@@ -4,22 +4,23 @@ This file implements tests for various parts of the Falcon.py library.
 Test the code with:
 > make test
 """
-from common import q, sqnorm
-from fft import add, sub, mul, div, neg, fft, ifft
-from ntt import mul_zq, div_zq
-from samplerz import samplerz, MAX_SIGMA
-from ffsampling import ffldl, ffldl_fft, ffnp, ffnp_fft
-from ffsampling import gram
+from falcon.common import q, sqnorm
+from falcon.fft import add, sub, mul, div, neg, fft, ifft
+from falcon.ntt import mul_zq, div_zq
+from falcon.samplerz import samplerz, MAX_SIGMA
+from falcon.ffsampling import ffldl, ffldl_fft, ffnp, ffnp_fft
+from falcon.ffsampling import gram
 from random import randint, random, gauss, uniform
 from math import sqrt, ceil
-from ntrugen import karamul, ntru_gen, gs_norm
-from falcon import SecretKey, PublicKey, Params
-from falcon import SALT_LEN, HEAD_LEN, SHAKE256
+from falcon.ntrugen import karamul, ntru_gen, gs_norm
+from falcon.falcon import SecretKey, PublicKey, Params
+from falcon.falcon import SALT_LEN, HEAD_LEN, SHAKE256
 from encoding import compress, decompress
-from scripts import saga
-from scripts.samplerz_KAT512 import sampler_KAT512
-from scripts.sign_KAT import sign_KAT
-from scripts.samplerz_KAT1024 import sampler_KAT1024
+from falcon.scripts import saga
+from falcon.scripts.samplerz_KAT512 import sampler_KAT512
+from falcon.scripts.sign_KAT import sign_KAT
+from falcon.scripts.samplerz_KAT1024 import sampler_KAT1024
+
 # https://stackoverflow.com/a/25823885/4143624
 from timeit import default_timer as timer
 
@@ -35,7 +36,7 @@ def vecmatmul(t, B):
     nrows = len(B)
     ncols = len(B[0])
     deg = len(B[0][0])
-    assert(len(t) == nrows)
+    assert len(t) == nrows
     v = [[0 for k in range(deg)] for j in range(ncols)]
     for j in range(ncols):
         for i in range(nrows):
@@ -82,7 +83,7 @@ def check_ntru(f, g, F, G):
     a = karamul(f, G)
     b = karamul(g, F)
     c = [a[i] - b[i] for i in range(len(f))]
-    return ((c[0] == q) and all(coef == 0 for coef in c[1:]))
+    return (c[0] == q) and all(coef == 0 for coef in c[1:])
 
 
 def test_ntrugen(n, iterations=10):
@@ -129,7 +130,7 @@ def test_ffnp(n, iterations):
         diffB = vecmatmul(diff, B)
         norm_zmc = int(round(sqnorm(diffB)))
         m = max(m, norm_zmc)
-    th_bound = (n / 4.) * sqgsnorm
+    th_bound = (n / 4.0) * sqgsnorm
     if m > th_bound:
         print("Warning: ffnp does not output vectors as short as expected")
         return False
@@ -145,7 +146,7 @@ def test_compress(n, iterations):
     except KeyError:
         return True
     for i in range(iterations):
-        while(1):
+        while 1:
             initial = [int(round(gauss(0, sigma))) for coef in range(n)]
             compressed = compress(initial, slen)
             if compressed is not False:
@@ -164,7 +165,7 @@ def test_samplerz(nb_mu=100, nb_sig=100, nb_samp=1000):
     """
     # Minimal size of a bucket for the chi-squared test (must be >= 5)
     chi2_bucket = 10
-    assert(nb_samp >= 10 * chi2_bucket)
+    assert nb_samp >= 10 * chi2_bucket
     sigmin = 1.3
     nb_rej = 0
     for i in range(nb_mu):
@@ -173,10 +174,10 @@ def test_samplerz(nb_mu=100, nb_sig=100, nb_samp=1000):
             sigma = uniform(sigmin, MAX_SIGMA)
             list_samples = [samplerz(mu, sigma, sigmin) for _ in range(nb_samp)]
             v = saga.UnivariateSamples(mu, sigma, list_samples)
-            if (v.is_valid is False):
+            if v.is_valid is False:
                 nb_rej += 1
     return True
-    if (nb_rej > 5 * ceil(saga.pmin * nb_mu * nb_sig)):
+    if nb_rej > 5 * ceil(saga.pmin * nb_mu * nb_sig):
         return False
     else:
         return True
@@ -190,7 +191,7 @@ def KAT_randbytes(k):
     oc = octets[: (2 * k)]
     if len(oc) != (2 * k):
         raise IndexError("Randomness string out of bounds")
-    octets = octets[(2 * k):]
+    octets = octets[(2 * k) :]
     return bytes.fromhex(oc)[::-1]
 
 
@@ -210,7 +211,7 @@ def test_samplerz_KAT(unused, unused2):
             z = samplerz(mu, sigma, sigmin, randombytes=KAT_randbytes)
         except IndexError:
             return False
-        if (exp_z != z):
+        if exp_z != z:
             print("SamplerZ does not match KATs")
             return False
     return True
@@ -294,7 +295,7 @@ def test(n, iterations=500):
     wrapper_test(test_ffnp, "ffNP", n, iterations)
     # test_compress and test_signature are only performed
     # for parameter sets that are defined.
-    if (n in Params):
+    if n in Params:
         wrapper_test(test_compress, "Compress", n, iterations)
         wrapper_test(test_signature, "Signature", n, iterations)
         # wrapper_test(test_sign_KAT, "Signature KATs", n, iterations)
@@ -302,7 +303,7 @@ def test(n, iterations=500):
 
 
 # Run all the tests
-if (__name__ == "__main__"):
+if __name__ == "__main__":
     print("Test Sig KATs       : ", end="")
     print("OK" if (test_sign_KAT() is True) else "Not OK")
 
@@ -311,7 +312,7 @@ if (__name__ == "__main__"):
     print("")
 
     for i in range(6, 11):
-        n = (1 << i)
+        n = 1 << i
         it = 1000
         print("Test battery for n = {n}".format(n=n))
         test(n, it)
