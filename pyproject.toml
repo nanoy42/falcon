@@ -7,7 +7,7 @@ readme = "README.md"
 license = "MIT"
 
 [tool.poetry.dependencies]
-python = ">=3.7, <3.12"
+python = ">=3.7, <3.13"
 numpy = [
     {version="^1.21.5", python=">=3.7, <3.8"},
     {version="^1.22.3", python=">=3.8"},
