@@ -1,10 +1,11 @@
 [tool.poetry]
-name = "falcon"
+name = "falcon-digital-signature"
 version = "0.9.2"
 description = "A python implementation of the signature scheme Falcon with packaging "
 authors = ["Thomas Prest <thomas.prest@ens.fr>", "Yoann Piétri <Yoann.Pietri@lip6.fr>"]
 readme = "README.md"
 license = "MIT"
+packages = [{ include = "falcon" }]
 
 [tool.poetry.dependencies]
 python = ">=3.7, <3.13"
